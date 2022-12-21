@@ -102,15 +102,15 @@ resource "azurerm_synapse_firewall_rule" "home" {
   end_ip_address       = "24.91.87.90"
 }
 
-# resource "azurerm_synapse_role_assignment" "admin" {
-#   synapse_workspace_id = azurerm_synapse_workspace.synapse_ws.id
-#   role_name            = "Synapse Administrator"
-#   principal_id         = data.azurerm_client_config.current.object_id
-#   provisioner "local-exec" {
-#     command = "sleep 60"
-#   }
-#   depends_on           = [azurerm_synapse_firewall_rule.allowall, azurerm_synapse_firewall_rule.allowall,azurerm_synapse_firewall_rule.home]
-# }
+resource "azurerm_synapse_role_assignment" "admin" {
+  synapse_workspace_id = azurerm_synapse_workspace.synapse_ws.id
+  role_name            = "Synapse Administrator"
+  principal_id         = data.azurerm_client_config.current.object_id
+  provisioner "local-exec" {
+    command = "sleep 60"
+  }
+  depends_on           = [azurerm_synapse_firewall_rule.allowall, azurerm_synapse_firewall_rule.allowall,azurerm_synapse_firewall_rule.home]
+}
 
 # resource "azurerm_synapse_sql_pool" "example" {
 #   name                 = "${local.prefix}_sql"
