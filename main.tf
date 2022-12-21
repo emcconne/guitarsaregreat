@@ -33,6 +33,12 @@ resource "azurerm_synapse_workspace" "synapse_ws" {
       azure_devops_repo,
     ]
   }
+  
+  aad_admin {
+    login     = "AzureAD Admin"
+    object_id = data.azurerm_client_config.current.object_id
+    tenant_id = data.azurerm_client_config.current.tenant_id
+  }
 
   identity {
     type = "SystemAssigned"
@@ -102,13 +108,11 @@ resource "azurerm_synapse_firewall_rule" "home" {
   end_ip_address       = "24.91.87.90"
 }
 
-resource "azurerm_synapse_role_assignment" "admin" {
-  synapse_workspace_id = azurerm_synapse_workspace.synapse_ws.id
-  role_name            = "Synapse Administrator"
+resource "azurerm_synapse_role_assignment" "example" {
+  synapse_workspace_id = azurerm_synapse_workspace.synapse.id
+  role_name            = "Synapse SQL Administrator"
   principal_id         = data.azurerm_client_config.current.object_id
-  provisioner "local-exec" {
-    command = "sleep 90"
-  }
+
   depends_on           = [azurerm_synapse_firewall_rule.allowall, azurerm_synapse_firewall_rule.allowall,azurerm_synapse_firewall_rule.home]
 }
 
