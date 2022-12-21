@@ -107,7 +107,7 @@ resource "azurerm_synapse_role_assignment" "admin" {
   role_name            = "Synapse Administrator"
   principal_id         = data.azurerm_client_config.current.object_id
   provisioner "local-exec" {
-    command = "sleep 60"
+    command = "sleep 90"
   }
   depends_on           = [azurerm_synapse_firewall_rule.allowall, azurerm_synapse_firewall_rule.allowall,azurerm_synapse_firewall_rule.home]
 }
