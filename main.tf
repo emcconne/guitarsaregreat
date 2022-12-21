@@ -109,7 +109,7 @@ resource "azurerm_synapse_firewall_rule" "home" {
 }
 
 resource "azurerm_synapse_role_assignment" "example" {
-  synapse_workspace_id = azurerm_synapse_workspace.synapse.id
+  synapse_workspace_id = azurerm_synapse_workspace.synapse_ws.id
   role_name            = "Synapse SQL Administrator"
   principal_id         = data.azurerm_client_config.current.object_id
 
