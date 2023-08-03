@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Vue Test</title>
+
+    <!--<script src="https://cdn.jsdelivr.net/npm/vue"></script>-->
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.min.js"></script>
+
+
+    
+    <!-- import stylesheet -->
+    <link rel="stylesheet" href="styles.css" />
+
+    <!-- Google fonts -->
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet" />
+  </head>
+
+  <body>
+    <div id="app">
+      <form action="https://prod-52.eastus.logic.azure.com:443/workflows/f720f106f1d0480aa0aec98d2579c0cc/triggers/manual/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=CmdqGIMSkQAABexBFvEgkU8_IqL89IeD5EUl3sAsSTM" method="post">
+        <table>
+            <tr v-for="item in items">
+              <td>{{ item.id }}</td>
+              <td>{{ item.title }}</td>
+              <td>{{ item.price }}</td>
+              <td>{{ item.condition }}</td>
+              <td><input type="checkbox" name="item_id" value={{item.id}}>{{item.id}}</td>
+            </tr>
+        </table>
+        <button type="submit">Submit</button>
+      </form>
+      <p>The value of id is: {{ id }}</p>
+    </div>
+
+    <script>
+      new Vue({
+        el: "#app",
+        data() {
+          return {
+            items: [],
+            url: ""
+          }
+        },
+        mounted() {
+          this.url = 'https://guitarsdevesa.z13.web.core.windows.net/' + this.id + '.json';
+          console.log(this.url);
+          fetch(this.url)
+            .then(response => response.json())
+            .then(data => {
+              this.items = data;
+            })
+            .catch(error => console.error(error));
+        },
+        created() {
+          this.id = this.getParameterByName("id")
+        },
+        methods: {
+          getParameterByName(name) {
+            var search = window.location.search;
+            var parameters = search.substring(1).split("&");
+            for (var i = 0; i < parameters.length; i++) {
+              var parameter = parameters[i].split("=");
+              if (parameter[0] === name) {
+                return parameter[1];
+              }
+            }
+            return null;
+          }
+        }
+      });
+    </script>
+  </body>
+</html>
+
+<!--
+  <html>
+  <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+  <template>
+    <div>
+      <table>
+        <tr v-for="item in items">
+          <td v-for="cell in item">{{ cell }}</td>
+        </tr>
+      </table>
+    </div>
+  </template>
+  <script>
+  export default {
+    data() {
+      return {
+        items: []
+      }
+    },
+    created() {
+      fetch("https://guitarsdevesa.z13.web.core.windows.net/638095841340988612.json")
+        .then(response => response.json())
+        .then(data => {
+          this.items = data;
+        })
+        .catch(error => console.error(error));
+    }
+  };
+  </script>
+  <body>
+    <form action="https://prod-52.eastus.logic.azure.com:443/workflows/f720f106f1d0480aa0aec98d2579c0cc/triggers/manual/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=CmdqGIMSkQAABexBFvEgkU8_IqL89IeD5EUl3sAsSTM" method="post">
+      <div>
+        <input type="checkbox" name="selectedFields" value="118570416"> 118570416
+      </div>
+      <div>
+        <input type="checkbox" name="selectedFields" value="luke"> Luke
+      </div>
+      <div>
+        <input type="checkbox" name="selectedFields" value="tracey"> Tracey
+      </div>
+      <div>
+        <input type="checkbox" name="selectedFields" value="brent"> Brent
+      </div>
+      <button type="submit">Submit</button>
+    </form>
+  </body>
+
+</html>
+-->
+
