@@ -108,24 +108,42 @@ def qualified_product(criteria, product):
     if criteria.not_words is not None:
         if search_words(product.title, build_list_from_string(criteria.not_words)):
             return False
-    if not search_words(product.condition, ["Good","Great","Excellent"]):
+    if not search_words(product.condition, ["Fair","Good","Great","Excellent"]):
         return False
     return True
 
 def parse_gc_html(model, gc_url):
     matching_models = []
-    for product in gc_url('.product').items():
-        title = product.find('.productTitle').text()
-        extended_price = product.find('.productPrice').text()
+    for product in gc_url('.listing-container .product-item').items():
+        # title = product.find('.productTitle').text()
+        # extended_price = product.find('.productPrice').text()
+        # price = Price.fromstring(extended_price).amount_float
+        # original = product.find('.maxSavingsMSRP').text()
+        # original_price = Price.fromstring(original).amount_float
+        # condition = product.find('.productCondition').text()
+        # extended_product_id = product.find('.productId').text()
+        # product_id = (extended_product_id[5:])
+        # found_product = Product(id=product_id, model=model, price=price, original_price=original_price, title=title, condition=condition)
+        # matching_models.append(found_product)
+    
+        product_element = product.find('.product-name')
+        title = product_element.text()
+        url = product_element.attr('href')
+        extended_price = product.find('.sale-price').text()
         price = Price.fromstring(extended_price).amount_float
-        original = product.find('.maxSavingsMSRP').text()
-        original_price = Price.fromstring(original).amount_float
-        condition = product.find('.productCondition').text()
-        extended_product_id = product.find('.productId').text()
+        was = product.find('.was-price').text()
+        original_price = Price.fromstring(was).amount_float
+        extended_product_id = product.attr('data-product-sku-id')
         product_id = (extended_product_id[5:])
+        store_name_element = product.find('.store-name-text')
+        store_name = store_name_element.text()
+        extended_condition = store_name_element.parents('p').nextAll().text()
+        condition = (extended_condition[11:]) 
         found_product = Product(id=product_id, model=model, price=price, original_price=original_price, title=title, condition=condition)
         matching_models.append(found_product)
     return matching_models
+
+
 def add_new_item(container, product):
     new_item = {
         "id": product.id,
