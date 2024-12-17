@@ -25,16 +25,19 @@ class Criteria:
         self.extra_words = extra_words
         self.not_words = not_words
 
-COSMOS_ENDPOINT = os.environ["COSMOS_ENDPOINT"]
-COSMOS_KEY = os.environ["COSMOS_KEY"]
-GC_USED_URL = os.environ["GC_USED_URL"]
-#Prices taken from dropdown on GC website
-price_range=[25,50,100,200,300,500,750,1000,1500,2000,3000,5000,7500,15000,50000]
-client = CosmosClient(COSMOS_ENDPOINT, COSMOS_KEY)
-partition_key_path = PartitionKey(path="/id")
-db = client.create_database_if_not_exists(id="GuitarCenter")
-criteria_container = db.create_container_if_not_exists(id="Criteria", partition_key=partition_key_path, offer_throughput=400)
-item_container = db.create_container_if_not_exists(id="Items", partition_key=partition_key_path, offer_throughput=400)
+try:
+    COSMOS_ENDPOINT = os.environ["COSMOS_ENDPOINT"]
+    COSMOS_KEY = os.environ["COSMOS_KEY"]
+    GC_USED_URL = os.environ["GC_USED_URL"]
+    #Prices taken from dropdown on GC website
+    price_range=[25,50,100,200,300,500,750,1000,1500,2000,3000,5000,7500,15000,50000]
+    client = CosmosClient(COSMOS_ENDPOINT, COSMOS_KEY)
+    partition_key_path = PartitionKey(path="/id")
+    db = client.create_database_if_not_exists(id="GuitarCenter")
+    criteria_container = db.create_container_if_not_exists(id="Criteria", partition_key=partition_key_path, offer_throughput=400)
+    item_container = db.create_container_if_not_exists(id="Items", partition_key=partition_key_path, offer_throughput=400)
+except Exception as e:
+    logging.error('An error occurred: %s', e)
 
 def main(mytimer: func.TimerRequest) -> None:
     utc_timestamp = datetime.datetime.utcnow().replace(
@@ -44,7 +47,10 @@ def main(mytimer: func.TimerRequest) -> None:
         logging.info('The timer is past due!')
 
     logging.info('Python timer trigger function ran at %s', utc_timestamp)
-    queryGuitarCenter()
+    try:
+        queryGuitarCenter()
+    except Exception as e:
+        logging.error('An error occurred: %s', e)
 
 def set_price_range_url_option(low_price, high_price):
     # These values are defined in the min/max boxes for prices on GC website
@@ -96,6 +102,19 @@ def search_words(string, word_list):
             return True
     return False
 
+def match_at_least_one(title, word_list):
+    for word in word_list:
+        if word.lower() in title.lower().split():
+            return True
+    return False
+
+def match_all(s, word_list):
+    s = s.lower().split()
+    for word in word_list:
+        if word.lower() not in s:
+            return False
+    return True
+
 def qualified_product(criteria, product):
     if criteria.high_price != 0 or criteria.low_price != 0:
         if criteria.high_price <= criteria.low_price:
@@ -103,12 +122,12 @@ def qualified_product(criteria, product):
         if product.price >= criteria.high_price or product.price < criteria.low_price:
             return False
     if criteria.extra_words is not None:
-        if not search_words(product.title, build_list_from_string(criteria.extra_words)):
+        if not match_all(product.title, build_list_from_string(criteria.extra_words)):
             return False
     if criteria.not_words is not None:
-        if search_words(product.title, build_list_from_string(criteria.not_words)):
+        if match_at_least_one(product.title, build_list_from_string(criteria.not_words)):
             return False
-    if not search_words(product.condition, ["Fair","Good","Great","Excellent"]):
+    if not match_at_least_one(product.condition, ["Fair","Good","Great","Excellent"]):
         return False
     return True
 
@@ -164,37 +183,26 @@ def add_new_item(container, product):
             existing_item["price"] = product.price
             container.replace_item(item=existing_item, body=existing_item)
     except CosmosResourceNotFoundError:
-        container.create_item(body=new_item)
-
-def query_items_not_ignored_by_model(container, model):
-    item_results = item_container.query_items(
-        query="SELECT * FROM i WHERE i.ignored=false and i.model=@model",
-        parameters=[
-            { "name":"@model", "value": model}
-        ],
-        enable_cross_partition_query=True
-    )
-    return item_results
-
-def query_items_not_ignored(container):
-    item_results = item_container.query_items(
-        query="SELECT * FROM i WHERE i.ignored=false",
-        enable_cross_partition_query=True
-    )
-    return item_results
+        try:
+            container.create_item(body=new_item)
+            logging.info('Added new item to database: %s:%s', product.id, product.title)
+        except Exception as e:
+            logging.error('An error occurred: %s', e)
 
 def queryGuitarCenter():
     # Create a CosmosClient instance using the connection string
     logging.info('Starting GC Query Execution')
-
-    query = "SELECT * FROM c WHERE c.Disabled = false"
-    result_iterable = criteria_container.query_items(query, enable_cross_partition_query=True)
-    for criteria_item in result_iterable:
-        criteria = Criteria(criteria_item.get("Model"), criteria_item.get("LowPrice"), criteria_item.get("HighPrice"), criteria_item.get("ExtraSearchItems"), criteria_item.get("NotWords"))
-        model = criteria.model
-        gc_url = GC_USED_URL + build_string_from_list(build_list_from_string(criteria.model),"%20") + set_price_range_url_option(criteria.low_price, criteria.high_price) + "&recsPerPage=90"
-        gc_html = pq(url=gc_url)
-        products = parse_gc_html(model, gc_html)
-        for p in products:
-            if qualified_product(criteria, p):
-                add_new_item(item_container, p)
+    try:
+        query = "SELECT * FROM c WHERE c.Disabled = false"
+        result_iterable = criteria_container.query_items(query, enable_cross_partition_query=True)
+        for criteria_item in result_iterable:
+            criteria = Criteria(criteria_item.get("Model"), criteria_item.get("LowPrice"), criteria_item.get("HighPrice"), criteria_item.get("ExtraSearchItems"), criteria_item.get("NotWords"))
+            model = criteria.model
+            gc_url = GC_USED_URL + build_string_from_list(build_list_from_string(criteria.model),"%20") + set_price_range_url_option(criteria.low_price, criteria.high_price) + "&recsPerPage=90"
+            gc_html = pq(url=gc_url)
+            products = parse_gc_html(model, gc_html)
+            for p in products:
+                if qualified_product(criteria, p):
+                    add_new_item(item_container, p)
+    except Exception as e:
+        logging.error('An error occurred: %s', e)
