@@ -25,19 +25,17 @@ class Criteria:
         self.extra_words = extra_words
         self.not_words = not_words
 
-try:
-    COSMOS_ENDPOINT = os.environ["COSMOS_ENDPOINT"]
-    COSMOS_KEY = os.environ["COSMOS_KEY"]
-    GC_USED_URL = os.environ["GC_USED_URL"]
-    #Prices taken from dropdown on GC website
-    price_range=[25,50,100,200,300,500,750,1000,1500,2000,3000,5000,7500,15000,50000]
-    client = CosmosClient(COSMOS_ENDPOINT, COSMOS_KEY)
-    partition_key_path = PartitionKey(path="/id")
-    db = client.create_database_if_not_exists(id="GuitarCenter")
-    criteria_container = db.create_container_if_not_exists(id="Criteria", partition_key=partition_key_path, offer_throughput=400)
-    item_container = db.create_container_if_not_exists(id="Items", partition_key=partition_key_path, offer_throughput=400)
-except Exception as e:
-    logging.error('An error occurred: %s', e)
+COSMOS_ENDPOINT = os.environ["COSMOS_ENDPOINT"]
+COSMOS_KEY = os.environ["COSMOS_KEY"]
+GC_USED_URL = os.environ["GC_USED_URL"]
+#Prices taken from dropdown on GC website
+price_range=[25,50,100,200,300,500,750,1000,1500,2000,3000,5000,7500,15000,50000]
+client = CosmosClient(COSMOS_ENDPOINT, COSMOS_KEY)
+partition_key_path = PartitionKey(path="/id")
+db = client.create_database_if_not_exists(id="GuitarCenter")
+criteria_container = db.create_container_if_not_exists(id="Criteria", partition_key=partition_key_path, offer_throughput=400)
+item_container = db.create_container_if_not_exists(id="Items", partition_key=partition_key_path, offer_throughput=400)
+logging.error('An error occurred: %s', e)
 
 def main(mytimer: func.TimerRequest) -> None:
     utc_timestamp = datetime.datetime.utcnow().replace(
@@ -134,17 +132,6 @@ def qualified_product(criteria, product):
 def parse_gc_html(model, gc_url):
     matching_models = []
     for product in gc_url('.listing-container .product-item').items():
-        # title = product.find('.productTitle').text()
-        # extended_price = product.find('.productPrice').text()
-        # price = Price.fromstring(extended_price).amount_float
-        # original = product.find('.maxSavingsMSRP').text()
-        # original_price = Price.fromstring(original).amount_float
-        # condition = product.find('.productCondition').text()
-        # extended_product_id = product.find('.productId').text()
-        # product_id = (extended_product_id[5:])
-        # found_product = Product(id=product_id, model=model, price=price, original_price=original_price, title=title, condition=condition)
-        # matching_models.append(found_product)
-    
         product_element = product.find('.product-name')
         title = product_element.text()
         url = product_element.attr('href')

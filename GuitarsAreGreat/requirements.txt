@@ -2,9 +2,16 @@
 # The Python Worker is managed by the Azure Functions platform
 # Manually managing azure-functions-worker may cause unexpected issues
 
-azure-functions
-azure-core==1.24.0
-msrest==0.6.21
-pyquery
-price_parser
-azure-cosmos
+# azure-functions
+# azure-core==1.24.0
+# msrest==0.6.21
+# pyquery
+# price_parser
+# azure-cosmos
+#azure-data-tables=12.3.0
+azure-core==1.30.2
+msrest==0.7.1
+pyquery==2.0.0
+price_parser==0.3.4
+azure-cosmos==4.4.0
+azure-functions==1.19.0
