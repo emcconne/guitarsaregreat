@@ -1,4 +1,3 @@
-from operator import ne
 from pyquery import PyQuery as pq
 from azure.cosmos import CosmosClient, PartitionKey
 from azure.cosmos.exceptions import CosmosResourceNotFoundError
@@ -35,7 +34,6 @@ partition_key_path = PartitionKey(path="/id")
 db = client.create_database_if_not_exists(id="GuitarCenter")
 criteria_container = db.create_container_if_not_exists(id="Criteria", partition_key=partition_key_path, offer_throughput=400)
 item_container = db.create_container_if_not_exists(id="Items", partition_key=partition_key_path, offer_throughput=400)
-logging.error('An error occurred: %s', e)
 
 def main(mytimer: func.TimerRequest) -> None:
     utc_timestamp = datetime.datetime.utcnow().replace(
