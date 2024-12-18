@@ -36,6 +36,7 @@ criteria_container = db.create_container_if_not_exists(id="Criteria", partition_
 item_container = db.create_container_if_not_exists(id="Items", partition_key=partition_key_path, offer_throughput=400)
 
 def main(mytimer: func.TimerRequest) -> None:
+    logging.info('Python timer trigger function started')
     utc_timestamp = datetime.datetime.utcnow().replace(
         tzinfo=datetime.timezone.utc).isoformat()
 
